@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+    <jms:activemq-connector name="Active_MQ" username="admin" password="admin" brokerURL="tcp://localhost:61716" validateConnections="true" doc:name="Active MQ"/>
+    <flow name="jmstransactiondemoFlow">
+        <jms:inbound-endpoint exchange-pattern="request-response" queue="incomingQ" connector-ref="Active_MQ" doc:name="JMS">
+            <jms:transaction action="ALWAYS_BEGIN"/>
+        </jms:inbound-endpoint>
+        <jms:outbound-endpoint queue="outgoingQ" connector-ref="Active_MQ" doc:name="JMS">
+            <jms:transaction action="ALWAYS_JOIN"/>
+        </jms:outbound-endpoint>
+        <scripting:transformer doc:name="Groovy">
+            <scripting:script engine="Groovy"><![CDATA[if(true){
+throw new RuntimeException("This is RuntimeException")
+}]]></scripting:script>
+        </scripting:transformer>
+        <rollback-exception-strategy maxRedeliveryAttempts="3" doc:name="Rollback Exception Strategy">
+            <logger message="This is rollback Strategy" level="INFO" doc:name="Logger"/>
+        </rollback-exception-strategy>
+    </flow>
+</mule>
